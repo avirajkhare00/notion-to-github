@@ -193,11 +193,19 @@ export class NotionService {
   }
 
   convertToMDX(page: NotionPage, frontMatter?: Record<string, any>): string {
+    // Format date as YYYY-MM-DD for publishedAt
+    const publishedDate = new Date(page.lastEditedTime).toISOString().split('T')[0];
+
+    // Generate summary from first paragraph or heading
+    const firstParagraph = page.content.split('\n\n')[0] || '';
+    const summary = firstParagraph.length > 150
+      ? firstParagraph.substring(0, 150) + '...'
+      : firstParagraph || 'No summary available';
+
     const defaultFrontMatter = {
       title: page.title,
-      date: new Date(page.lastEditedTime).toISOString(),
-      url: page.url,
-      notionId: page.id,
+      publishedAt: publishedDate,
+      summary: summary,
       ...frontMatter,
     };
 
