@@ -199,10 +199,21 @@ app.post('/api/validate', async (req, res) => {
 // Webhook endpoint to receive Notion notifications (via Notion Automations or 3rd-party)
 app.post('/api/webhooks/notion', async (req, res) => {
   try {
+    // Log all incoming webhook requests for debugging
+    console.log('=== WEBHOOK REQUEST RECEIVED ===');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('================================');
+
     const providedSecret = req.header('X-Webhook-Secret') || '';
     const expectedSecret = process.env.WEBHOOK_SECRET || '';
 
     if (!expectedSecret || providedSecret !== expectedSecret) {
+      console.log('Webhook verification failed:');
+      console.log('Expected secret:', expectedSecret ? '***SET***' : 'NOT SET');
+      console.log('Provided secret:', providedSecret ? '***PROVIDED***' : 'NOT PROVIDED');
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
