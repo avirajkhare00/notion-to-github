@@ -99,32 +99,40 @@ export class NotionToGitHubConverter {
 
   async convertSinglePage(pageId: string): Promise<ConversionResult> {
     try {
-      // This would require additional Notion API calls to get a single page
-      // For now, we'll use the existing database approach
-      const pages = await this.notionService.getPagesFromDatabase(this.config.notionDatabaseId);
-      const targetPage = pages.find(page => page.id === pageId);
+      // Get single page directly by ID (no database required)
+      const pageContent = await this.notionService.getPageContent(pageId);
+      const pageTitle = await this.notionService.getPageTitle(pageId);
 
-      if (!targetPage) {
+      if (!pageContent || !pageTitle) {
         return {
           success: false,
-          message: 'Page not found',
-          errors: [`Page with ID ${pageId} not found in database`],
+          message: 'Page not found or inaccessible',
+          errors: [`Page with ID ${pageId} not found or access denied`],
         };
       }
 
-      const mdxContent = this.notionService.convertToMDX(targetPage);
-      const fileName = this.generateFileName(targetPage.title);
+      const page = {
+        id: pageId,
+        title: pageTitle,
+        content: pageContent,
+        properties: {},
+        lastEditedTime: new Date().toISOString(),
+        url: '',
+      };
+
+      const mdxContent = this.notionService.convertToMDX(page);
+      const fileName = this.generateFileName(page.title);
       const filePath = `${this.config.outputPath}/${fileName}.mdx`;
 
       await this.githubService.createOrUpdateFile(
         filePath,
         mdxContent,
-        `Update ${targetPage.title} from Notion`
+        `Update ${page.title} from Notion`
       );
 
       return {
         success: true,
-        message: `Successfully converted and pushed "${targetPage.title}" to GitHub`,
+        message: `Successfully converted and pushed "${page.title}" to GitHub`,
         filesProcessed: 1,
       };
     } catch (error) {
@@ -148,11 +156,6 @@ export class NotionToGitHubConverter {
 
   async validateConfiguration(): Promise<{ isValid: boolean; errors: string[] }> {
     const errors: string[] = [];
-
-    // Validate Notion configuration
-    if (!this.config.notionDatabaseId) {
-      errors.push('Notion database ID is required');
-    }
 
     // Validate GitHub configuration
     if (!this.config.githubRepoOwner) {

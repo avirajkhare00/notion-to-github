@@ -21,7 +21,6 @@ app.get('/api/health', (_req, res) => {
 // Helper: build converter from env if not provided in body
 function buildConverterFromEnv() {
   const notionApiKey = process.env.NOTION_API_KEY || '';
-  const notionDatabaseId = process.env.NOTION_DATABASE_ID || '';
   const githubToken = process.env.GITHUB_TOKEN || '';
   const githubRepoOwner = process.env.GITHUB_REPO_OWNER || '';
   const githubRepoName = process.env.GITHUB_REPO_NAME || '';
@@ -29,7 +28,7 @@ function buildConverterFromEnv() {
   const outputPath = process.env.OUTPUT_PATH || 'content/posts';
 
   const config: ConversionConfig = {
-    notionDatabaseId,
+    notionDatabaseId: '', // Not needed for webhook single-page operations
     githubRepoOwner,
     githubRepoName,
     githubBranch,

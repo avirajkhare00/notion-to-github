@@ -52,7 +52,7 @@ export class NotionService {
     }
   }
 
-  private async getPageContent(pageId: string): Promise<string> {
+  async getPageContent(pageId: string): Promise<string> {
     try {
       const blocks = await this.client.blocks.children.list({
         block_id: pageId,
@@ -62,6 +62,22 @@ export class NotionService {
     } catch (error) {
       console.error('Error fetching page content:', error);
       return '';
+    }
+  }
+
+  async getPageTitle(pageId: string): Promise<string> {
+    try {
+      const page = await this.client.pages.retrieve({
+        page_id: pageId,
+      });
+
+      if ('properties' in page) {
+        return this.extractTitle((page as any).properties);
+      }
+      return 'Untitled';
+    } catch (error) {
+      console.error('Error fetching page title:', error);
+      return 'Untitled';
     }
   }
 
